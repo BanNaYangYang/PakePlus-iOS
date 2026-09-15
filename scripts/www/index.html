@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>勐海跑王记牌器</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    background: #1f6041;
+    padding: 6px;
+    font-family: system-ui, sans-serif;
+  }
+  .top {
+    text-align: center;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .btn-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  button {
+    padding: 8px 14px;
+    font-size: 15px;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+  }
+  #undo { background: #4488ff; }
+  #reset { background: #ff4444; }
+
+  .count-row {
+    font-size: 15px;
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .card-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+  }
+  .card {
+    width: 58px;
+    height: 83px;
+    background: #fff;
+    border-radius: 5px;
+    border: 1px solid #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .red { color: red; }
+  .hide { opacity: 0.2; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="btn-group">
+    <button id="undo">撤销上一张</button>
+    <button id="reset">重置全部</button>
+    <div id="adCard" class="card">广告</div>
+  </div>
+  <div class="count-row" id="countRow"></div>
+</div>
+
+<div class="card-box" id="cardBox"></div>
+
+<script>
+const cardBox = document.getElementById('cardBox');
+const countRow = document.getElementById('countRow');
+const undoBtn = document.getElementById('undo');
+const resetBtn = document.getElementById('reset');
+const adCard = document.getElementById('adCard');
+
+const history = [];
+const suits = ['♠', '♥', '♣', '♦', '王', '广告'];
+const suitNames = ['♠黑桃', '♥红桃', '♣梅花', '♦方块', '王', '广告'];
+
+// 调整为：黑桃、红桃、梅花、方块
+const normalSuits = ['♠', '♥', '♣', '♦'];
+const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const cardsData = [];
+
+for (let s of normalSuits) {
+  for (let r of ranks) {
+    cardsData.push({
+      text: r + s,
+      suit: s,
+      cls: s === '♥' || s === '♦' ? 'red' : ''
+    });
+  }
+}
+
+cardsData.push({ text: '小王', suit: '王', cls: '' });
+cardsData.push({ text: '大王', suit: '王', cls: '' });
+
+cardsData.forEach(item => {
+  const div = document.createElement('div');
+  div.className = 'card ' + item.cls;
+  div.innerText = item.text;
+  div.dataset.suit = item.suit;
+  div.onclick = () => {
+    if (!div.classList.contains('hide')) {
+      div.classList.add('hide');
+      history.push(div);
+      refreshCount();
+    }
+  };
+  cardBox.appendChild(div);
+});
+
+adCard.dataset.suit = '广告';
+adCard.onclick = () => {
+  if (!adCard.classList.contains('hide')) {
+    adCard.classList.add('hide');
+    history.push(adCard);
+    refreshCount();
+  }
+};
+
+function refreshCount() {
+  const total = { '♠':0, '♥':0, '♣':0, '♦':0, '王':0, '广告':0 };
+  
+  document.querySelectorAll('.card:not(.hide)').forEach(c => {
+    const s = c.dataset.suit;
+    if (total[s] !== undefined) total[s]++;
+  });
+
+  countRow.innerText = 
+    `♠:${total['♠']}  ♥:${total['♥']}  ♣:${total['♣']}  ♦:${total['♦']}  王:${total['王']}  广告:${total['广告']}`;
+}
+
+undoBtn.onclick = () => {
+  if (history.length) {
+    const last = history.pop();
+    last.classList.remove('hide');
+    refreshCount();
+  }
+};
+
+resetBtn.onclick = () => {
+  document.querySelectorAll('.card').forEach(c => c.classList.remove('hide'));
+  history.length = 0;
+  refreshCount();
+};
+
+refreshCount();
+</script>
+</body>
+</html>
